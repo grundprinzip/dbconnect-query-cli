@@ -24,6 +24,7 @@ type Output struct {
 
 func run() error {
 	profile := flag.String("profile", "DEFAULT", "Databricks authentication profile")
+	clusterID := flag.String("cluster-id", "serverless", "Cluster ID to use, or \"serverless\" for serverless compute")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [flags] <sql-query>\n\nFlags:\n", os.Args[0])
 		flag.PrintDefaults()
@@ -40,7 +41,11 @@ func run() error {
 	ctx := context.Background()
 	cb := dbconnect.NewDataBricksChannelBuilder()
 	cb = cb.WithConfig(&config.Config{Profile: *profile})
-	cb = cb.UseServerless()
+	if *clusterID == "serverless" {
+		cb = cb.UseServerless()
+	} else {
+		cb = cb.UseCluster(*clusterID)
+	}
 
 	spark, err := sql.NewSessionBuilder().WithChannelBuilder(cb).Build(ctx)
 	if err != nil {
