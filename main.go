@@ -78,16 +78,16 @@ func run() error {
 	// plans, and resolves the query. This marks the first server response.
 	timeToFirstResponse := time.Since(startTime)
 
-	schema, err := df.Schema(ctx)
-	if err != nil {
-		return fmt.Errorf("schema retrieval failed: %w", err)
-	}
-
 	rows, err := df.Collect(ctx)
 	if err != nil {
 		return fmt.Errorf("result collection failed: %w", err)
 	}
 	totalTime := time.Since(startTime)
+
+	schema, err := df.Schema(ctx)
+	if err != nil {
+		return fmt.Errorf("schema retrieval failed: %w", err)
+	}
 
 	// Format collected rows as CSV.
 	var csvBuf bytes.Buffer
