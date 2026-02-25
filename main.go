@@ -53,18 +53,14 @@ func run() error {
 	}
 	defer spark.Stop()
 
-	// Collect the EXPLAIN EXTENDED plan before running the actual query.
-	explainDF, err := spark.Sql(ctx, fmt.Sprintf("EXPLAIN EXTENDED %s", query))
-	if err != nil {
-		return fmt.Errorf("explain failed: %w", err)
-	}
-	explainRows, err := explainDF.Collect(ctx)
-	if err != nil {
-		return fmt.Errorf("explain collect failed: %w", err)
-	}
+	// Best-effort: collect the EXPLAIN EXTENDED plan before running the actual query.
 	var explainBuf bytes.Buffer
-	for _, row := range explainRows {
-		explainBuf.WriteString(fmt.Sprintf("%v", row.At(0)))
+	if explainDF, err := spark.Sql(ctx, fmt.Sprintf("EXPLAIN EXTENDED %s", query)); err == nil {
+		if explainRows, err := explainDF.Collect(ctx); err == nil {
+			for _, row := range explainRows {
+				explainBuf.WriteString(fmt.Sprintf("%v", row.At(0)))
+			}
+		}
 	}
 
 	// Execute the actual query and measure timing.
